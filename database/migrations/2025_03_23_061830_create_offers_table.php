@@ -20,7 +20,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade')->cascadeOnUpdate();
             $table->string('title');
             $table->string('location_name')->nullable();
-            $table->string('country')->nullable();
+            $table->string('country')->nullable();//test
             $table->text('body');
             $table->double('price', 8, 2)->nullable();
             $table->boolean('is_open')->default(1)->comment('1:open, 0:close');
