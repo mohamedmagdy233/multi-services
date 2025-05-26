@@ -37,8 +37,10 @@ Route::group(['prefix' => 'v1'], function () {
 
 
             Route::post('add-offer', [UserController::class, 'addOffer']);
+            Route::post('update-offer/{id}', [UserController::class, 'updateOffer']);
             Route::get('get-my-offers', [UserController::class, 'getMyOffers']);
             Route::get('close-offer/{id}', [UserController::class, 'closeOffer']);
+            Route::get('open-offer/{id}', [UserController::class, 'openOffer']);
             Route::post('add-or-delete-fav', [UserController::class, 'addOrDeleteFav']);
             Route::get('get-my-fav', [UserController::class, 'getFav']);
 

@@ -45,6 +45,15 @@ class UserController extends Controller
         }
 
     }
+    public function updateOffer(Request $request, $id)
+    {
+        try {
+            return $this->objService->updateOffer($request, $id);
+        } catch (\Exception $e) {
+            return self::ExeptionResponse();
+        }
+
+    }
     public function getHome(Request $request)
     {
         try {
@@ -97,6 +106,15 @@ class UserController extends Controller
     {
         try {
             return $this->objService->closeOffer($id);
+        } catch (\Exception $e) {
+            return self::ExeptionResponse();
+        }
+
+    }
+    public function openOffer($id)
+    {
+        try {
+            return $this->objService->openOffer($id);
         } catch (\Exception $e) {
             return self::ExeptionResponse();
         }

@@ -35,11 +35,12 @@ class UserService extends BaseService
         protected GeneralOfferService   $generalOfferService,
         protected OfferService          $offerService,
         protected Fav                   $fav,
-        protected Chat $chat,
-        protected Room $room,
-        protected SettingService $settingService,
-        protected Notification $notification
-    ) {
+        protected Chat                  $chat,
+        protected Room                  $room,
+        protected SettingService        $settingService,
+        protected Notification          $notification
+    )
+    {
         parent::__construct($model);
     }
 
@@ -91,10 +92,13 @@ class UserService extends BaseService
     {
         $service_type_id = $data->service_type_id;
         $search = $data->search;
+        $country = $data->country;
         $generalOffers = $this->generalOfferService->model->apply()->where('end_date', '>=', date('Y-m-d H:i:s'))->get();
-        $offers = $this->offerService->model->apply()->where('is_open', 1)->where('user_id', '!=', auth('api')->user()->id)
+        $offers = $this->offerService->model->apply()->where('is_open', 1)
             ->when($service_type_id, function ($query) use ($service_type_id) {
                 return $query->where('service_type_id', $service_type_id);
+            })->when($country, function ($query) use ($country) {
+                return $query->where('country', $country);
             })->when('search', function ($query) use ($search) {
                 return $query->where('title', 'like', '%' . $search . '%');
             })->orderBy('price', 'desc')
@@ -109,17 +113,48 @@ class UserService extends BaseService
         return $this->responseMsg('data added Successfully', $data);
     }
 
+    public function updateOffer($request, $id)
+    {
+        $offer = $this->offerService->model->find($id);
+        if (!$offer) {
+            return $this->responseMsg('offer not found', null, 404);
+        }
+        $data = $request->all();
+        unset($data['media']);
+        $offer->update($data);
+
+        if ($request->has('media')) {
+            //delete old media files
+            $offer->media()->each(function ($media) {
+                ;
+                $this->media->deleteFile($media->file);
+                $media->delete();
+            });
+            $mediaFiles = $request->media;
+            foreach ($mediaFiles as $media) {
+                $media = $this->handleFile($media, 'Offer');
+                $offer->media()->create(['file' => $media]);
+            }
+        }
+
+        return $this->responseMsg('data updated Successfully', null);
+    }
+
+
     public function getOffers($data)
     {
         $service_type_id = $data->service_type_id;
         $search = $data->search;
-        $offers = $this->offerService->model->apply()->where('is_open', 1)->where('user_id', '!=', auth('api')->user()->id)
+        $country = $data->country;
+        $offers = $this->offerService->model->apply()->where('is_open', 1)
             ->when($service_type_id, function ($query) use ($service_type_id) {
                 return $query->where('service_type_id', $service_type_id);
             })->when('search', function ($query) use ($search) {
                 return $query->where('title', 'like', '%' . $search . '%');
             })->when($data->sub_service_type_id, function ($query) use ($data) {
                 return $query->where('sub_service_type_id', $data->sub_service_type_id);
+            })->when($country, function ($query) use ($country) {
+                return $query->where('country', $country);
             })
             ->when($data->min_price, function ($query) use ($data) {
                 return $query->where('price', '>=', $data->min_price);
@@ -200,6 +235,16 @@ class UserService extends BaseService
             return $this->responseMsg('offer not found or already closed', null, 404);
         }
         $offer->update(['is_open' => 0]);
+        return $this->responseMsg('data updated Successfully', null);
+    }
+
+    public function openOffer($id)
+    {
+        $offer = $this->offerService->model->find($id);
+        if (!$offer || $offer->is_open == 1) {
+            return $this->responseMsg('offer not found or already opened', null, 404);
+        }
+        $offer->update(['is_open' => 1]);
         return $this->responseMsg('data updated Successfully', null);
     }
 
@@ -320,6 +365,7 @@ class UserService extends BaseService
             'room_id' => $room->id,
         ]);
     }
+
     public function sendMessage($request)
     {
         $user = auth('api')->user();
@@ -341,13 +387,12 @@ class UserService extends BaseService
         $message = $this->chat->create([
             'room_id' => $room->id,
             'sender_id' => $user->id,
-            'receiver_id' => $room->receiver_id==$user->id ? $room->sender_id : $room->receiver_id,
+            'receiver_id' => $room->receiver_id == $user->id ? $room->sender_id : $room->receiver_id,
             'message' => $message,
             'type' => $request->type,
         ]);
 
         if ($message) {
-
 
 
             // send Firebase notification
@@ -389,6 +434,7 @@ class UserService extends BaseService
         $notifications = $this->notification->where('user_id', $user->id)->orderBy('created_at', 'desc')->get();
         return $this->responseMsg('data added Successfully', NotificationResourece::collection($notifications));
     }
+
     public function seeNotification($request)
     {
         $user = auth('api')->user();

@@ -26,8 +26,8 @@ class OfferRequest extends FormRequest
     public function rules()
     {
         return [
-          'service_type_id' => 'required|exists:service_types,id',
-      'sub_service_type_id' => 'required|exists:sub_service_types,id',
+            'service_type_id' => 'required|exists:service_types,id',
+            'sub_service_type_id' => 'required|exists:sub_service_types,id',
             'price' => 'nullable|numeric',
             'title' => 'required|string',
             'body' => 'required|string',
@@ -36,6 +36,7 @@ class OfferRequest extends FormRequest
             'long' => 'required|numeric',
             'media' => 'required|array',
             'location_name' => 'required|string',
+            'country' => 'required|string',
         ];
     }
 

@@ -23,6 +23,7 @@ class BaseOfferResource extends JsonResource
             'lat' => $this->lat,
             'long' => $this->long,
             'location_name' => $this->location_name,
+            'country' => $this->country,
             'status' => (int)$this->status,
             'is_fav' => $this->isFavorite(),
             'logo' => getFile(optional($this->media->first())->file), // optional is not important but i added
